@@ -1,0 +1,529 @@
+# Mission: Autonomous Multi-Agent Development — Shift Roster Planner
+
+你现在是本项目的 Lead Orchestrator、Technical Lead 和 Engineering Manager。
+
+你的任务是组织多个专业 AI Agent，协同开发一个可运行、可测试的 Shift Roster Planner & Arrangement Advisor MVP，并建立自动化的 Development–Testing–Bug Fix 闭环。
+
+项目根目录中的 `Shift_Roster_Planner_PRD_v1.1.md` 是本项目业务需求的 Single Source of Truth。
+
+请完整阅读该文档，然后自主规划、开发、集成、测试和修复问题。
+
+不要仅仅输出开发计划。完成规划后，直接开始实际开发。
+
+## 1. Project Objective
+
+本项目用于帮助两名 Manager 管理19名员工、4个小组的 Shift Roster。
+
+当一名或多名员工请假，导致 Manpower Coverage 不足时，系统能够：
+
+- 读取原始 Schedule，包括已有 Leave。
+- 识别人力不足的日期及具体时间段。
+- 自动搜索符合业务规则的 Arrangement。
+- 支持 OT、Standby Conversion、Shift Reassignment、Off/Reset Recall、Same-day Swap、Cross-date Swap 和 Combined Arrangement。
+- 根据优先级排序可行方案。
+- 展示每个方案涉及的员工、原班次、新班次、额外工时及调整后的人力覆盖。
+- 记录员工同意或拒绝。
+- 根据拒绝情况重新计算方案。
+- 在 Manager 确认后更新有效 Roster。
+
+最终交付一个能够在本地运行、具有完整核心业务流程并进入自动化测试循环的 MVP。
+
+## 2. Development Principles
+
+本阶段遵循以下原则：
+
+- Functionality First.
+- Simplicity First.
+- Testability First.
+- Correctness Before UI Polish.
+- Avoid Overengineering.
+- Prefer Deterministic Algorithms over LLM-based Decisions.
+
+暂时不需要：
+
+- Authentication / Login System
+- RBAC
+- Enterprise Security Architecture
+- Cloud Deployment
+- Kubernetes
+- Microservices
+- External API Integration
+- Employee Self-service Portal
+- Email / Teams Integration
+- Complex UI Design
+
+保留基本的数据校验、文件备份和防止数据损坏的机制即可。
+
+不要在非核心功能上浪费开发时间。
+
+## 3. Technology Stack
+
+优先使用：
+
+- Python
+- Streamlit
+- Pandas
+- Google OR-Tools CP-SAT
+- CSV for business data
+- JSON for configurable business rules
+- Pytest for automated testing
+- Git for version control
+
+如果发现更简单、更适合 MVP 的实现方式，可以进行调整，但必须记录技术决策及原因。
+
+不允许使用 LLM 代替确定性的排班规则校验。
+
+## 4. Multi-Agent Development Organization
+
+如果当前 Codex 环境支持 Subagents，请实际创建和调度多个 Agent。
+
+如果当前环境不支持真正的并行 Subagents，则由主 Agent 按以下角色顺序执行任务，并维护相同的任务边界与交付标准。
+
+不要假装已经启动不存在的 Agent。
+
+### Agent 0 — Lead Orchestrator
+
+Responsibilities:
+
+- 阅读完整 PRD。
+- 制定开发计划。
+- 分解任务和依赖关系。
+- 分配任务给专业 Agent。
+- 定义共享接口和数据结构。
+- 管理开发进度。
+- 解决 Agent 之间的实现冲突。
+- 集成所有模块。
+- 执行最终测试。
+- 驱动持续修复循环。
+
+Lead Orchestrator 对最终交付结果负责。
+
+### Agent 1 — Product & Business Analyst
+
+Responsibilities:
+
+- 分析 PRD。
+- 提取所有已确认业务规则。
+- 区分 Hard Constraints、Soft Constraints 和特殊例外。
+- 定义 Manpower Coverage 计算标准。
+- 定义 Arrangement Actions。
+- 定义业务验收标准。
+- 识别需求冲突和未确认事项。
+- 创建 Business Rule Matrix。
+- 为 QA Agent 提供业务测试场景。
+
+特别注意：
+
+- Night Early Start 允许提前2小时，是连续12小时工作限制的明确例外。
+- 原始 Schedule 可能已经包含 Leave。
+- Off 和 Reset 员工可以安排 D、N 或 S。
+- 每月最大工时264小时。
+- Standby 是补充人力，而不是独立岗位。
+- 不需要历史 OT 公平性算法。
+- Critical 情况下允许询问员工是否愿意取消 Leave，但不能自动取消。
+- Cross-date 和 Cross-team Swap 均允许。
+
+不得擅自将未确认需求变成已确认规则。
+
+### Agent 2 — Data Engineer
+
+Responsibilities:
+
+- 设计 CSV Schema。
+- 实现 Data Access Layer。
+- 实现 Master Roster 导入。
+- 支持包含 Leave 的原始 Schedule。
+- 实现横向 Roster 与纵向数据格式转换。
+- 实现员工、班次、Leave、Arrangement 数据管理。
+- 保留 Original Roster。
+- 实现 Effective Roster 计算。
+- 实现 CSV 导出。
+- 实现基础数据校验。
+- 实现文件备份和安全写入。
+- 创建19名虚拟员工的测试数据。
+
+所有其他模块必须通过统一 Data Access Layer 访问数据，不得各自实现 CSV 读写逻辑。
+
+### Agent 3 — Backend & Optimization Engineer
+
+Responsibilities:
+
+- 实现 Manpower Coverage Checker。
+- 实现 Working Hours Calculator。
+- 实现 Constraint Validator。
+- 实现 Arrangement Candidate Generator。
+- 实现 Arrangement Solver。
+- 实现 Priority Ranking Engine。
+- 支持多人、多日期、多班次组合。
+- 检查跨日和跨月影响。
+- 检查连续工作时间。
+- 检查每月264小时限制。
+- 支持员工拒绝后重新计算。
+- 支持 Critical Leave Cancellation Recommendation。
+
+Arrangement Solver 必须：
+
+1. 识别实际 manpower shortage。
+2. 生成候选 Arrangement Actions。
+3. 搜索单人及多人组合。
+4. 验证调整后的完整 Roster。
+5. 排除违反 Hard Constraints 的方案。
+6. 排除造成其他班次新增最低人力缺口的方案。
+7. 对可行方案进行去重。
+8. 根据优先级排序。
+9. 返回可解释的结果。
+
+必须支持 configurable search window、maximum arrangement size 和 search timeout。
+
+如果搜索受到时间或范围限制，必须明确标记结果是否完整。
+
+不能为了找到方案而违反 Hard Constraints。
+
+### Agent 4 — Frontend Engineer
+
+使用 Streamlit 实现简单、实用的 Manager Dashboard。
+
+需要实现以下页面：
+
+1. Master Roster
+2. Leave Management
+3. Manpower Coverage Dashboard
+4. Arrangement Advisor
+5. Arrangement Confirmation & History
+
+核心 UI 功能：
+
+- 上传 CSV Schedule。
+- 查看所有员工的 Calendar Roster。
+- 查看已有 Leave。
+- 添加或取消 Leave。
+- 高亮 manpower shortage。
+- 点击具体日期查看人力详情。
+- 点击 Find Arrangements。
+- 查看按优先级排列的 Arrangement Options。
+- 展示 Before / After Coverage。
+- 展示每个员工的 Original Shift 和 Proposed Shift。
+- 展示额外工时。
+- 记录员工 Accept / Reject。
+- 拒绝后重新搜索。
+- 确认完整 Arrangement Plan。
+- 导出更新后的 Roster。
+
+不要追求复杂视觉效果。
+
+优先保证所有按钮、输入框、页面和业务操作真实可用。
+
+禁止使用没有实际功能的 Placeholder Button。
+
+### Agent 5 — QA & Testing Engineer
+
+Responsibilities:
+
+- 独立阅读 PRD。
+- 独立设计测试场景。
+- 编写 Pytest Automated Tests。
+- 测试正常业务流程。
+- 测试异常情况。
+- 测试边界条件。
+- 验证 Solver 输出。
+- 发现并记录 Bug。
+- 验证 Bug Fix。
+- 执行 Regression Testing。
+- 输出测试报告。
+
+QA Agent 不应仅仅验证代码是否能够运行，还必须验证业务逻辑是否正确。
+
+重点测试：
+
+- 无人请假。
+- 单人 Leave。
+- 多人同时 Leave。
+- Day Shift Shortage。
+- Night Shift Shortage。
+- Standby Conversion。
+- Standby OT。
+- Night Early Start。
+- Off Day Recall。
+- Reset Day Recall。
+- Same-day Swap。
+- Cross-date Swap。
+- Cross-team Swap。
+- 多人组合 Arrangement。
+- 跨午夜工时计算。
+- 跨月工时计算。
+- 每月264小时边界。
+- 连续工作时间限制。
+- Night Shift 后立即接班。
+- 已存在 Leave 的原始 Schedule。
+- 员工拒绝 Arrangement。
+- Critical Leave Cancellation Recommendation。
+- 无可行 Arrangement。
+- Arrangement 导致未来日期出现新的 shortage。
+- 重复方案去重。
+- 多人 Swap 的整体确认。
+- CSV 导入导出。
+- 完整 End-to-End Manager Workflow。
+
+## 5. Shared Workspace and Communication Protocol
+
+建立以下共享项目文件：
+
+- `AGENTS.md`
+- `DEVELOPMENT_PLAN.md`
+- `ARCHITECTURE.md`
+- `BUSINESS_RULES.md`
+- `DATA_SCHEMA.md`
+- `TASK_TRACKER.md`
+- `OPEN_QUESTIONS.md`
+- `DECISION_LOG.md`
+- `TEST_PLAN.md`
+- `BUG_TRACKER.md`
+- `TEST_REPORT.md`
+- `PROGRESS.md`
+- `README.md`
+
+所有 Agent 必须遵循共享文档中定义的接口、业务规则和任务边界。
+
+避免多个 Agent 同时修改同一个核心文件。
+
+如果支持 Git Worktree 或独立 Branch，可以使用它们隔离并行开发任务，由 Lead Orchestrator 负责集成。
+
+如果需要修改共享接口，先更新接口协议，再通知相关 Agent。
+
+不要创建大量没有实际价值的文档。保持文档简洁，并优先交付代码。
+
+## 6. Development Phases
+
+### Phase 0 — Planning and Task Allocation
+
+- 阅读 PRD。
+- 检查现有 Repository。
+- 确认项目结构。
+- 提取业务规则。
+- 定义数据模型和模块接口。
+- 创建 Task Tracker。
+- 分配 Agent 任务。
+- 定义验收标准。
+
+完成后立即进入 Phase 1。
+
+### Phase 1 — Data Foundation
+
+- CSV Schema。
+- Mock Data Generator。
+- Data Access Layer。
+- Original Roster。
+- Effective Roster。
+- Schedule Import / Export。
+- Leave Management。
+- 基础 Unit Tests。
+
+### Phase 2 — Rule Engine
+
+- Shift Time Calculator。
+- Manpower Coverage Checker。
+- Working Hours Calculator。
+- Hard Constraint Validator。
+- Night Early Start Exception。
+- 跨日及跨月处理。
+- 业务规则自动化测试。
+
+### Phase 3 — Arrangement Solver
+
+- Candidate Generation。
+- OT。
+- Standby Conversion。
+- Shift Reassignment。
+- Recall。
+- Swap。
+- Combined Arrangement。
+- Priority Ranking。
+- Solver Validation。
+- Optimization Tests。
+
+### Phase 4 — Frontend Integration
+
+- Streamlit Dashboard。
+- Roster View。
+- Leave Management。
+- Shortage Detection。
+- Arrangement Advisor。
+- Accept / Reject Workflow。
+- Roster Update。
+- CSV Export。
+
+### Phase 5 — Automated Testing Loop
+
+进入持续开发、测试、修复闭环。
+
+## 7. Autonomous Development and Testing Loop
+
+这是本项目最重要的执行机制。
+
+每个开发阶段必须执行：
+
+1. Plan tasks.
+2. Implement functionality.
+3. Run unit tests.
+4. Run integration tests.
+5. Review implementation.
+6. Identify defects.
+7. Record defects.
+8. Assign bug-fix tasks.
+9. Fix defects.
+10. Run regression tests.
+11. Update progress.
+12. Continue to the next task.
+
+完成所有核心功能后，执行完整的 End-to-End Testing Loop。
+
+具体流程：
+
+Implement → Test → Identify Bugs → Fix → Retest → Regression Test → Review → Repeat
+
+每次发现 Bug 时：
+
+- 记录 Bug ID。
+- 记录复现步骤。
+- 记录 Expected Result。
+- 记录 Actual Result。
+- 记录 Severity。
+- 找出 Root Cause。
+- 实施修复。
+- 增加对应 Regression Test。
+- 重新运行相关测试。
+
+禁止通过删除失败测试、降低验收标准、硬编码测试结果或放宽业务规则来让测试通过。
+
+对于无法解决的问题，记录原因、已尝试的方案及剩余风险。
+
+如果同一问题连续三轮无法解决，交由 Lead Orchestrator 重新分析设计，不要无限重复相同的修复方式。
+
+## 8. Autonomous Execution Rules
+
+你被授权在当前项目工作区内自主：
+
+- 创建文件。
+- 修改代码。
+- 安装项目依赖。
+- 创建虚拟环境。
+- 运行本地命令。
+- 生成模拟数据。
+- 执行测试。
+- 调试错误。
+- 重构代码。
+- 创建 Git Commit。
+- 分配和重新分配 Agent 任务。
+- 更新项目文档。
+
+不要在每个开发步骤后停下来等待我的确认。
+
+不要因为某个非关键需求尚未确认而阻塞整个项目。
+
+对于非关键问题：
+
+- 选择简单、可逆、合理的默认实现。
+- 记录在 DECISION_LOG.md。
+- 继续开发。
+
+对于影响核心业务正确性的未确认规则：
+
+- 记录在 OPEN_QUESTIONS.md。
+- 将相关规则设计为可配置。
+- 使用保守默认值或暂时禁用相关功能。
+- 继续开发不受影响的模块。
+
+仅当遇到真正无法继续的阻塞问题时才停止并请求人工确认。
+
+不得使用真实公司员工数据进行开发，使用虚拟数据即可。
+
+不需要付费服务、外部 API 或云资源。
+
+## 9. Definition of Done
+
+MVP 必须达到以下标准：
+
+- 可以在本地成功启动。
+- 可以加载19名虚拟员工、4个小组的 Schedule。
+- 可以读取原始 Schedule 中已有的 Leave。
+- 可以新增 Leave。
+- 可以自动检测 manpower shortage。
+- 可以生成实际可行的 Arrangement Options。
+- 可以对方案进行优先级排序。
+- 可以解释每个方案的调整内容。
+- 可以显示调整前后的人力覆盖。
+- 可以验证工时和业务规则。
+- 可以记录员工接受或拒绝。
+- 可以在拒绝后重新计算。
+- 可以确认完整 Arrangement Plan。
+- 可以更新和导出 Effective Roster。
+- 核心 Unit Tests 全部通过。
+- 核心 Integration Tests 全部通过。
+- 至少完成一次完整 End-to-End Workflow Test。
+- 不存在已知的 Critical Business Logic Bug。
+- README 包含清晰的本地启动和测试命令。
+
+如果未达到上述标准，不要宣称项目已经完成。
+
+## 10. Execution Start
+
+现在开始执行。
+
+首先读取 PRD 和检查 Repository，然后：
+
+1. 建立 Multi-Agent Development Team。
+2. 创建开发计划和任务依赖关系。
+3. 定义共享数据模型与接口。
+4. 分配可以并行执行的任务。
+5. 开始实际编码。
+6. 集成各个模块。
+7. 运行自动化测试。
+8. 修复发现的问题。
+9. 进入持续 Testing–Fixing–Regression Loop。
+
+不要只回复我计划如何开发。
+
+直接执行开发任务。
+
+持续推进，直到 MVP 达到 Definition of Done，或者遇到无法自主解决的真实阻塞问题。
+
+最后提供：
+
+- Implemented Features
+- Agent Contributions
+- Architecture Summary
+- Test Results
+- Fixed Bugs
+- Remaining Issues
+- How to Run
+- How to Test
+- Recommended Next Steps
+
+
+IMPORTANT REQUIREMENT UPDATE — PRD v1.1
+
+`Shift_Roster_Planner_PRD_v1.1.md` supersedes v1.0 and is now the Single Source of Truth.
+
+The latest version introduces a mandatory Senior Coverage constraint (H14).
+
+- Total employees: 19.
+- Senior employees: 14.
+- Junior employees: 5.
+- Team A: 4 Seniors + 1 Junior.
+- Team B: 4 Seniors + 1 Junior.
+- Team C: 3 Seniors + 2 Juniors.
+- Team D: 3 Seniors + 1 Junior.
+
+Every Day Shift and Night Shift must have at least one Senior covering the entire 12-hour shift.
+
+This is a Hard Constraint, not a ranking preference. It applies even under emergency manpower conditions.
+
+A shift with sufficient headcount but insufficient Senior coverage must be classified as CRITICAL.
+
+The Arrangement Solver must satisfy both headcount and Senior coverage constraints without introducing new shortages on other shifts or dates.
+
+All agents must update their data models, business rules, solver logic, UI components and automated tests accordingly.
+
+The QA Agent must independently validate all 35 test scenarios defined in PRD v1.1.
+
+Continue the previously defined autonomous multi-agent development and testing loop using the updated requirements.
