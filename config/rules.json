@@ -1,0 +1,10 @@
+{
+  "timezone": "Asia/Singapore",
+  "coverage": {"day_08_18_normal": 4, "day_08_18_min": 3, "day_18_20_min": 3, "night_min": 3},
+  "senior_coverage": {"day_min": 1, "night_min": 1, "require_same_senior_full_shift": true, "emergency_exception": false},
+  "base_standby": {"min": 1, "max": 2, "cycle_days": 12},
+  "hours": {"continuous_max": 12, "daily_max": 12, "monthly_max": 264, "minimum_rest_hours": null, "night_early_exception": true},
+  "actions": {"standby_ot": true, "standby_conversion": true, "night_early": true, "off_recall": true, "reset_recall": true, "reset_standby": true, "off_standby": false, "cross_date_swap": true, "cross_team_swap": true, "direct_reassignment": false, "critical_leave_cancel_request": true},
+  "search": {"days_before": 3, "days_after": 3, "max_changed_members": 4, "max_changed_assignments": 8, "time_limit_seconds": 30},
+  "ot_fairness": false
+}

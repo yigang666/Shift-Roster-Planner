@@ -1,0 +1,20 @@
+member_id,name,team,experience_level,active
+A01,Example A01,A,SENIOR,true
+A02,Example A02,A,SENIOR,true
+A03,Example A03,A,SENIOR,true
+A04,Example A04,A,SENIOR,true
+A05,Example A05,A,JUNIOR,true
+B01,Example B01,B,SENIOR,true
+B02,Example B02,B,SENIOR,true
+B03,Example B03,B,SENIOR,true
+B04,Example B04,B,SENIOR,true
+B05,Example B05,B,JUNIOR,true
+C01,Example C01,C,SENIOR,true
+C02,Example C02,C,SENIOR,true
+C03,Example C03,C,SENIOR,true
+C04,Example C04,C,JUNIOR,true
+C05,Example C05,C,JUNIOR,true
+D01,Example D01,D,SENIOR,true
+D02,Example D02,D,SENIOR,true
+D03,Example D03,D,SENIOR,true
+D04,Example D04,D,JUNIOR,true
